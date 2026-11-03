@@ -1,0 +1,130 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Overlay: emulated AWS with Floci (https://github.com/floci-io/floci, MIT).
+#
+# The SAME Terraform that provisions real AWS (infra/terraform/modules) runs here
+# against the emulator: the `tf-local-floci` one-shot applies
+# infra/terraform/envs/local-floci (KMS key and alias, objects bucket, Object Lock audit
+# bucket, Secrets Manager secrets, SES identity) before migrate, api, worker and egress
+# start. They then use AWS exactly as they do in production:
+#
+#   keys      KEY_MODE=kms: every stored secret's data key is wrapped with KMS
+#             (alias/agentguard-local), encryption context bound to its record
+#   objects   S3 bucket agentguard-local-objects, SSE-KMS: incident evidence, exports
+#   audit     S3 bucket agentguard-local-audit with Object Lock: signed audit checkpoints
+#   secrets   AWS Secrets Manager becomes available as an external secret store
+#   mail      MAIL_BACKEND=smtp by default here: Mailpit, so a fresh `make up` can show
+#             approval and threat mail without an operator first verifying a sender
+#             identity and, in the SES sandbox, every recipient. Set MAIL_BACKEND=ses in
+#             .env (AG_MAIL_BACKEND) to exercise the real SES identity Terraform created
+#             on the emulator instead; mail then lands in Floci, not Mailpit, and is
+#             rejected for any recipient Floci has not been told to treat as verified.
+# ─────────────────────────────────────────────────────────────────────────────
+x-floci-env: &floci-env
+  AGENTGUARD_CLOUD: floci
+  AWS_REGION: us-east-1
+  AWS_ACCESS_KEY_ID: test
+  AWS_SECRET_ACCESS_KEY: test
+  AWS_ENDPOINT_URL: http://floci:4566
+  S3_FORCE_PATH_STYLE: "true"
+  STORAGE: s3
+  OBJECTS_BUCKET: agentguard-local-objects
+  AUDIT_BUCKET: agentguard-local-audit
+  KEY_MODE: kms
+  KMS_KEY_ID: alias/agentguard-local
+  AWS_SECRETS_ENABLED: "true"
+  MAIL_BACKEND: ${AG_MAIL_BACKEND:-smtp}
+
+services:
+  floci:
+    image: floci/floci:2.3.0
+    environment:
+      FLOCI_HOSTNAME: floci
+      FLOCI_DEFAULT_REGION: us-east-1
+      FLOCI_STORAGE_MODE: persistent
+      FLOCI_STORAGE_PERSISTENT_PATH: /data
+    ports:
+      - "127.0.0.1:${AG_FLOCI_PORT:-5166}:4566"
+    volumes:
+      - flocidata:/data
+      # Only Docker-backed emulated services (Lambda, ECS, RDS) need the Docker socket.
+      # This stack uses S3, KMS, Secrets Manager, SES and SNS, so it stays unmounted.
+    networks:
+      default:
+        # The S3 Control API (bucket tagging) addresses <account-id>.<endpoint>, so the
+        # emulated account's name has to resolve to the emulator as well.
+        aliases: ["000000000000.floci"]
+    # The image has bash but no HTTP client: healthy once the edge port accepts.
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/4566"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+    restart: unless-stopped
+
+  # One-shot: provision the emulator with the production modules. Providers are cached
+  # in the agentguard-tf-plugins volume (shared with make tf-validate, and kept by
+  # make down), so later runs start in seconds.
+  tf-local-floci:
+    image: hashicorp/terraform:1.16.6
+    working_dir: /infra/terraform/envs/local-floci
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        until wget -q -O /dev/null http://floci:4566/; do sleep 1; done
+        mkdir -p /tfdata/state
+        terraform init -input=false -no-color >/dev/null
+        # State lives in the tfdata volume, so it shares the emulator's lifecycle
+        # (make down wipes both together).
+        terraform apply -input=false -auto-approve -no-color -state=/tfdata/state/local.tfstate -var endpoint=http://floci:4566 -var cors_origins='["http://localhost:${AG_WEB_PORT:-5110}","http://127.0.0.1:${AG_WEB_PORT:-5110}"]'
+    environment:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_REGION: us-east-1
+      TF_IN_AUTOMATION: "1"
+      TF_DATA_DIR: /tfdata/work
+      TF_PLUGIN_CACHE_DIR: /plugins
+    volumes:
+      - ../../infra/terraform:/infra/terraform:ro
+      - tfdata:/tfdata
+      - tfplugins:/plugins
+    healthcheck:
+      disable: true
+    depends_on:
+      floci:
+        condition: service_healthy
+    restart: "no"
+
+  migrate:
+    environment:
+      <<: *floci-env
+    depends_on:
+      tf-local-floci:
+        condition: service_completed_successfully
+
+  api:
+    environment:
+      <<: *floci-env
+    depends_on:
+      tf-local-floci:
+        condition: service_completed_successfully
+
+  worker:
+    environment:
+      <<: *floci-env
+    depends_on:
+      tf-local-floci:
+        condition: service_completed_successfully
+
+  egress:
+    environment:
+      <<: *floci-env
+    depends_on:
+      tf-local-floci:
+        condition: service_completed_successfully
+
+volumes:
+  flocidata:
+  tfdata:
+  tfplugins:
+    name: agentguard-tf-plugins
