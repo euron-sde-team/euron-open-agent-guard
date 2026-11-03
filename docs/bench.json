@@ -1,0 +1,45 @@
+{
+  "cpus": 12,
+  "load_before": 17.15478515625,
+  "authorize": {
+    "p50_ms": 25.335,
+    "p95_ms": 150.566,
+    "p99_ms": 230.019,
+    "mean_ms": 45.485,
+    "n": 1000
+  },
+  "authorize_throughput": {
+    "decisions_per_s": 115.6,
+    "concurrency": 50,
+    "total": 2000
+  },
+  "engine_only": {
+    "us_per_decision": 96.36,
+    "policies": 50
+  },
+  "execute_http_tool": {
+    "direct": {
+      "p50_ms": 0.526,
+      "p95_ms": 1.223,
+      "p99_ms": 1.551,
+      "mean_ms": 0.633,
+      "n": 500
+    },
+    "through_agentguard": {
+      "p50_ms": 18.349,
+      "p95_ms": 63.828,
+      "p99_ms": 103.258,
+      "mean_ms": 25.905,
+      "n": 500
+    },
+    "overhead_p50_ms": 17.823
+  },
+  "audit": {
+    "sealed_after_run": 3778,
+    "seal_records_per_s": 7302.7,
+    "verified_records": 3778,
+    "verify_records_per_s": 15251.4,
+    "ok": true
+  },
+  "load_after": 15.78271484375
+}
