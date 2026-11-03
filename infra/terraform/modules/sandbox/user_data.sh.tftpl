@@ -1,0 +1,31 @@
+#!/bin/bash
+# Boot script for an AgentGuard sandbox host (ECS-optimized Amazon Linux 2023). Rendered
+# by Terraform. It joins the sandbox cluster, keeps tasks away from instance metadata, and
+# makes the sandbox seccomp profile (Docker's default plus only the namespace syscalls
+# nsjail needs) the Docker daemon's default, so sandbox tasks get it without privilege.
+set -euo pipefail
+
+cat >> /etc/ecs/ecs.config <<CONF
+ECS_CLUSTER=${cluster}
+ECS_AWSVPC_BLOCK_IMDS=true
+ECS_ENABLE_TASK_IAM_ROLE=true
+ECS_DISABLE_PRIVILEGED=true
+ECS_SELINUX_CAPABLE=false
+ECS_CONTAINER_STOP_TIMEOUT=60s
+CONF
+
+install -d -m 0755 /etc/docker
+cat > /etc/docker/sandbox-seccomp.json <<'PROFILE'
+${seccomp_profile}
+PROFILE
+chmod 0644 /etc/docker/sandbox-seccomp.json
+
+python3 - <<'PY'
+import json, os
+path = "/etc/docker/daemon.json"
+conf = json.load(open(path)) if os.path.exists(path) else {}
+conf["seccomp-profile"] = "/etc/docker/sandbox-seccomp.json"
+conf["no-new-privileges"] = True
+json.dump(conf, open(path, "w"), indent=2)
+PY
+systemctl restart docker
