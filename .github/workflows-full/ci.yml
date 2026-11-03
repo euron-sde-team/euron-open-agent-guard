@@ -1,0 +1,92 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sanitize:
+    name: sanitization and OpenAPI drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: scripts/check-sanitization.sh
+      - uses: astral-sh/setup-uv@v6
+      - name: OpenAPI reference matches the app
+        working-directory: apps/api
+        run: uv sync --frozen && uv run pytest tests/unit -q -k openapi_drift
+
+  integration:
+    name: integration tests (Postgres 16, Redis 7, OPA, Vault, mock services)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16.10-alpine
+        env:
+          POSTGRES_USER: agentguard
+          POSTGRES_PASSWORD: agentguard
+          POSTGRES_DB: agentguard
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U agentguard"
+          --health-interval 3s --health-timeout 3s --health-retries 30
+      redis:
+        image: redis:7.4.6-alpine
+        ports: ["6379:6379"]
+        options: --health-cmd "redis-cli ping" --health-interval 3s --health-retries 30
+      vault:
+        image: hashicorp/vault:1.21.0
+        env:
+          VAULT_DEV_ROOT_TOKEN_ID: ci-vault-root-token
+          VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+          SKIP_SETCAP: "true"
+        ports: ["8200:8200"]
+        options: >-
+          --health-cmd "wget -q -O /dev/null http://127.0.0.1:8200/v1/sys/health"
+          --health-interval 3s --health-retries 30
+    env:
+      TEST_DATABASE_URL: postgresql+asyncpg://agentguard:agentguard@localhost:5432/agentguard_test
+      TEST_REDIS_URL: redis://localhost:6379/15
+      TEST_OPA_URL: http://localhost:8181
+      TEST_VAULT_URL: http://localhost:8200
+      TEST_VAULT_TOKEN: ci-vault-root-token
+      TEST_MOCKAI_URL: http://localhost:5150
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv python install 3.12 && uv sync --frozen
+      # GitHub service containers cannot take a command, so OPA starts in server mode here.
+      - name: OPA in server mode
+        run: |
+          docker run -d --name opa -p 8181:8181 openpolicyagent/opa:1.10.0 run --server --addr 0.0.0.0:8181
+          for _ in $(seq 1 30); do curl -sf http://127.0.0.1:8181/health && break; sleep 1; done
+      # The mock services (model, OIDC, TokenShield, demo tools and MCP servers): no key
+      # and no network needed.
+      - name: Mock services
+        run: |
+          uv run uvicorn mockai.app:app --host 127.0.0.1 --port 5150 > /tmp/mockai.log 2>&1 &
+          for _ in $(seq 1 30); do curl -sf http://127.0.0.1:5150/healthz && break; sleep 1; done
+      - run: uv run pytest tests/unit tests/integration -q --cov=agentguard --cov-report=term-missing:skip-covered --cov-fail-under=85
+
+  sandbox:
+    name: hostile sandbox suite (real image)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: make env
+      - run: make test-sandbox

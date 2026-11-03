@@ -1,0 +1,15 @@
+# Code owners are requested for review on every pull request touching their paths.
+#
+# Uncomment and set a real GitHub team (or users) to enable. GitHub reports an
+# error for teams that do not exist, so the rules ship commented out.
+#
+# *                                            @<org>/<maintainers-team>
+# /infra/                                      @<org>/<maintainers-team>
+# /infra/docker/sandbox*                       @<org>/<security-team>
+# /apps/api/src/agentguard_sandbox/            @<org>/<security-team>
+# /apps/api/src/agentguard/policies/           @<org>/<security-team>
+# /apps/api/src/agentguard/decisions/          @<org>/<security-team>
+# /apps/api/src/agentguard/network/            @<org>/<security-team>
+# /apps/api/src/agentguard/secrets/            @<org>/<security-team>
+# /apps/api/src/agentguard/audit/              @<org>/<security-team>
+# /apps/api/src/agentguard/core/security.py    @<org>/<security-team>
