@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img" aria-labelledby="t d">
+  <title id="t">The AgentGuard decision pipeline</title>
+  <desc id="d">Ten steps decide one action: authenticate the agent, check its status and the kill switch, validate the tool and parameters, resolve the resource, read the run and the data in the parameters, score the risk, check limits, loops and budgets, evaluate policies with deny-overrides then permissions then the default, handle approvals, and record the decision. Steps 0, 1, 2 and 6 can deny before policies run. Policy evaluation ends in one of five outcomes: allow, restrict with obligations, require approval, deny, or quarantine, where the strongest matching decision wins. Any error while deciding is a deny with guard_unavailable.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#64748b"/></marker>
+    <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b91c1c"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#047857"/></marker>
+  </defs>
+  <rect width="1200" height="700" rx="16" fill="#f8fafc"/>
+  <g font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" fill="#0f172a">
+    <text x="40" y="44" fill="#64748b" font-size="12" font-weight="600" letter-spacing="1">ONE AUTHORIZE OR EXECUTE REQUEST</text>
+    <text x="860" y="44" fill="#64748b" font-size="12" font-weight="600" letter-spacing="1">OUTCOMES (STRONGEST WINS)</text>
+    <rect x="40" y="62" width="500" height="46" rx="10" fill="#d1fae5"/>
+    <circle cx="66" cy="85" r="13" fill="#047857"/>
+    <text x="66" y="90" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">0</text>
+    <text x="92" y="82" font-size="14.5" font-weight="650">Authenticate</text>
+    <text x="92" y="100" font-size="12" fill="#064e3b">Ed25519 token re-checked; signature, timestamp, nonce</text>
+    <path d="M290 108 L 290 120" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#a)"/>
+    <rect x="40" y="122" width="500" height="46" rx="10" fill="#d1fae5"/>
+    <circle cx="66" cy="145" r="13" fill="#047857"/>
+    <text x="66" y="150" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">1</text>
+    <text x="92" y="142" font-size="14.5" font-weight="650">Agent status, kill switch</text>
+    <text x="92" y="160" font-size="12" fill="#064e3b">suspended, quarantined, organisation stopped</text>
+    <path d="M290 168 L 290 180" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#a)"/>
+    <rect x="40" y="182" width="500" height="46" rx="10" fill="#d1fae5"/>
+    <circle cx="66" cy="205" r="13" fill="#047857"/>
+    <text x="66" y="210" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">2</text>
+    <text x="92" y="202" font-size="14.5" font-weight="650">Tool and parameters</text>
+    <text x="92" y="220" font-size="12" fill="#064e3b">registered, active, action known, schema and constraints</text>
+    <path d="M290 228 L 290 240" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#a)"/>
+    <rect x="40" y="242" width="500" height="46" rx="10" fill="#d1fae5"/>
+    <circle cx="66" cy="265" r="13" fill="#047857"/>
+    <text x="66" y="270" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">3</text>
+    <text x="92" y="262" font-size="14.5" font-weight="650">Resource</text>
+    <text x="92" y="280" font-size="12" fill="#064e3b">key from the request or template; owner, sensitivity</text>
+    <path d="M290 288 L 290 300" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#a)"/>
+    <rect x="40" y="302" width="500" height="46" rx="10" fill="#d1fae5"/>
+    <circle cx="66" cy="325" r="13" fill="#047857"/>
+    <text x="66" y="330" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">4</text>
+    <text x="92" y="322" font-size="14.5" font-weight="650">Run and data</text>
+    <text x="92" y="340" font-size="12" fill="#064e3b">taint, call count, age; PII and credentials found</text>
+    <path d="M290 348 L 290 360" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#a)"/>
+    <rect x="40" y="362" width="500" height="46" rx="10" fill="#d1fae5"/>
+    <circle cx="66" cy="385" r="13" fill="#047857"/>
+    <text x="66" y="390" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">5</text>
+    <text x="92" y="382" font-size="14.5" font-weight="650">Risk</text>
+    <text x="92" y="400" font-size="12" fill="#064e3b">score and level from tool, verb, data, taint, history</text>
+    <path d="M290 408 L 290 420" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#a)"/>
+    <rect x="40" y="422" width="500" height="46" rx="10" fill="#d1fae5"/>
+    <circle cx="66" cy="445" r="13" fill="#047857"/>
+    <text x="66" y="450" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">6</text>
+    <text x="92" y="442" font-size="14.5" font-weight="650">Limits, loops, budgets</text>
+    <text x="92" y="460" font-size="12" fill="#064e3b">atomic counters, loop guard, TokenShield</text>
+    <path d="M290 468 L 290 480" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#a)"/>
+    <rect x="40" y="482" width="500" height="46" rx="10" fill="#6ee7b7"/>
+    <circle cx="66" cy="505" r="13" fill="#047857"/>
+    <text x="66" y="510" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">7</text>
+    <text x="92" y="502" font-size="14.5" font-weight="650">Policies, permissions, OPA</text>
+    <text x="92" y="520" font-size="12" fill="#064e3b">deny-overrides; then grants; then default deny</text>
+    <path d="M290 528 L 290 540" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#a)"/>
+    <rect x="40" y="542" width="500" height="46" rx="10" fill="#d1fae5"/>
+    <circle cx="66" cy="565" r="13" fill="#047857"/>
+    <text x="66" y="570" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">8</text>
+    <text x="92" y="562" font-size="14.5" font-weight="650">Approvals</text>
+    <text x="92" y="580" font-size="12" fill="#064e3b">approved request for this exact hash used once</text>
+    <path d="M290 588 L 290 600" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#a)"/>
+    <rect x="40" y="602" width="500" height="46" rx="10" fill="#d1fae5"/>
+    <circle cx="66" cy="625" r="13" fill="#047857"/>
+    <text x="66" y="630" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">9</text>
+    <text x="92" y="622" font-size="14.5" font-weight="650">Record</text>
+    <text x="92" y="640" font-size="12" fill="#064e3b">decision, audit record, live event, token</text>
+    <rect x="860" y="62" width="300" height="72" rx="12" fill="#d1fae5"/>
+    <text x="880" y="90" font-size="15" font-weight="700" fill="#065f46">allow</text>
+    <text x="880" y="114" font-size="12" fill="#065f46">The action may run; decision token for function tools</text>
+    <rect x="860" y="154" width="300" height="72" rx="12" fill="#ccfbf1"/>
+    <text x="880" y="182" font-size="15" font-weight="700" fill="#115e59">restrict</text>
+    <text x="880" y="206" font-size="12" fill="#115e59">Runs with obligations the adapter applies</text>
+    <rect x="860" y="246" width="300" height="72" rx="12" fill="#fef3c7"/>
+    <text x="880" y="274" font-size="15" font-weight="700" fill="#92400e">require_approval</text>
+    <text x="880" y="298" font-size="12" fill="#92400e">Held; bound to the action hash; reviewers notified</text>
+    <rect x="860" y="338" width="300" height="72" rx="12" fill="#fee2e2"/>
+    <text x="880" y="366" font-size="15" font-weight="700" fill="#991b1b">deny</text>
+    <text x="880" y="390" font-size="12" fill="#991b1b">Refused with a reason code; never reaches the tool</text>
+    <rect x="860" y="430" width="300" height="72" rx="12" fill="#fecaca"/>
+    <text x="880" y="458" font-size="15" font-weight="700" fill="#7f1d1d">quarantine</text>
+    <text x="880" y="482" font-size="12" fill="#7f1d1d">Refused, and the agent is quarantined</text>
+  </g>
+  <g fill="none" stroke-width="2">
+    <path d="M540 505 C 700 505, 700 98, 858 98" stroke="#047857" marker-end="url(#g)"/>
+    <path d="M540 505 C 700 505, 700 190, 858 190" stroke="#047857" marker-end="url(#g)"/>
+    <path d="M540 505 C 700 505, 700 282, 858 282" stroke="#047857" marker-end="url(#g)"/>
+    <path d="M540 505 C 700 505, 700 374, 858 374" stroke="#047857" marker-end="url(#g)"/>
+    <path d="M540 505 C 700 505, 700 466, 858 466" stroke="#047857" marker-end="url(#g)"/>
+    <path d="M540 85 L 600 85" stroke="#b91c1c" stroke-dasharray="5 4"/>
+    <path d="M540 145 L 600 145" stroke="#b91c1c" stroke-dasharray="5 4"/>
+    <path d="M540 205 L 600 205" stroke="#b91c1c" stroke-dasharray="5 4"/>
+    <path d="M540 445 L 600 445" stroke="#b91c1c" stroke-dasharray="5 4"/>
+    <path d="M600 85 L 600 445" stroke="#b91c1c" stroke-dasharray="5 4"/>
+    <path d="M600 445 C 660 445, 700 386, 858 386" stroke="#b91c1c" stroke-dasharray="5 4" marker-end="url(#r)"/>
+    <path d="M540 565 L 830 565 L 830 80 L 858 80" stroke="#64748b" stroke-dasharray="3 4" marker-end="url(#a)"/>
+  </g>
+  <g font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12">
+    <text x="610" y="77" fill="#b91c1c">pre-checks can deny before policies</text>
+    <text x="556" y="531" fill="#047857">deny-overrides</text>
+    <text x="556" y="557" fill="#475569">an approved request is redeemed once: allow</text>
+    <rect x="860" y="532" width="300" height="88" rx="12" fill="#0f172a"/>
+    <text x="880" y="560" fill="#ecfdf5" font-size="14" font-weight="700">Fail closed</text>
+    <text x="880" y="582" fill="#cbd5e1">Database or Redis unreachable while</text>
+    <text x="880" y="600" fill="#cbd5e1">deciding: HTTP 503, deny, guard_unavailable</text>
+    <text x="860" y="652" fill="#475569">Audit mode: every action is allowed and recorded</text>
+    <text x="860" y="670" fill="#475569">with would_be, what enforce mode would decide.</text>
+  </g>
+</svg>

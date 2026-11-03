@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="t d">
+  <title id="t">AgentGuard architecture</title>
+  <desc id="d">Agents authenticate with their own tokens and call the AgentGuard API to authorize or execute actions, MCP clients use the single /mcp gateway, and tools the organisation runs itself verify and redeem decision tokens. People use the web dashboard, automation uses API keys. The API decides every action in one Postgres transaction, keeps counters in Redis, seals secrets with KMS and stores signed audit checkpoints in object storage. AgentGuard runs HTTP tools and MCP servers itself with injected secrets, sends untrusted code to the sandbox service, and consults OPA, Vault, TokenShield and an AI classifier when configured. The worker runs approvals, notifications, webhooks, MCP discovery, behavioural detection, audit sealing and retention. Agents and sandboxed code reach the internet only through the egress proxy.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#64748b"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#047857"/></marker>
+  </defs>
+  <rect width="1200" height="720" rx="16" fill="#f8fafc"/>
+  <g font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="15" fill="#0f172a">
+    <text x="135" y="40" text-anchor="middle" fill="#64748b" font-size="12" font-weight="600" letter-spacing="1">CALLERS</text>
+    <text x="430" y="40" text-anchor="middle" fill="#64748b" font-size="12" font-weight="600" letter-spacing="1">AGENTGUARD</text>
+    <text x="735" y="40" text-anchor="middle" fill="#64748b" font-size="12" font-weight="600" letter-spacing="1">DATA</text>
+    <text x="1040" y="40" text-anchor="middle" fill="#64748b" font-size="12" font-weight="600" letter-spacing="1">WHAT AGENTS ACT ON</text>
+
+    <!-- callers -->
+    <rect x="30" y="60" width="210" height="80" rx="12" fill="#e2e8f0"/>
+    <text x="135" y="92" text-anchor="middle" font-weight="650">Agents</text>
+    <text x="135" y="113" text-anchor="middle" fill="#475569" font-size="13">LangGraph, CrewAI, Python,</text>
+    <text x="135" y="130" text-anchor="middle" fill="#475569" font-size="13">Node.js, through the SDKs</text>
+
+    <rect x="30" y="160" width="210" height="70" rx="12" fill="#e2e8f0"/>
+    <text x="135" y="190" text-anchor="middle" font-weight="650">MCP clients</text>
+    <text x="135" y="211" text-anchor="middle" fill="#475569" font-size="13">one URL: /mcp</text>
+
+    <rect x="30" y="250" width="210" height="80" rx="12" fill="#e2e8f0"/>
+    <text x="135" y="282" text-anchor="middle" font-weight="650">Your own tools</text>
+    <text x="135" y="303" text-anchor="middle" fill="#475569" font-size="13">verify and redeem</text>
+    <text x="135" y="320" text-anchor="middle" fill="#475569" font-size="13">single-use decision tokens</text>
+
+    <rect x="30" y="350" width="210" height="80" rx="12" fill="#d1fae5"/>
+    <text x="135" y="382" text-anchor="middle" font-weight="650">People</text>
+    <text x="135" y="403" text-anchor="middle" fill="#475569" font-size="13">security officers, reviewers,</text>
+    <text x="135" y="420" text-anchor="middle" fill="#475569" font-size="13">auditors, org admins</text>
+
+    <rect x="30" y="450" width="210" height="70" rx="12" fill="#e2e8f0"/>
+    <text x="135" y="480" text-anchor="middle" font-weight="650">Automation</text>
+    <text x="135" y="501" text-anchor="middle" fill="#475569" font-size="13">API keys (agk_)</text>
+
+    <!-- agentguard -->
+    <rect x="320" y="60" width="220" height="70" rx="12" fill="#a7f3d0"/>
+    <text x="430" y="90" text-anchor="middle" font-weight="650">web</text>
+    <text x="430" y="111" text-anchor="middle" fill="#064e3b" font-size="13">Next.js dashboard, live feed</text>
+
+    <rect x="320" y="160" width="220" height="200" rx="12" fill="#6ee7b7"/>
+    <text x="430" y="190" text-anchor="middle" font-weight="650">api</text>
+    <text x="430" y="214" text-anchor="middle" fill="#064e3b" font-size="13">FastAPI, stateless, N replicas</text>
+    <text x="430" y="236" text-anchor="middle" fill="#064e3b" font-size="13">/oauth/token, JWKS</text>
+    <text x="430" y="256" text-anchor="middle" fill="#064e3b" font-size="13">authorize, execute, scan</text>
+    <text x="430" y="276" text-anchor="middle" fill="#064e3b" font-size="13">decision pipeline, policies</text>
+    <text x="430" y="296" text-anchor="middle" fill="#064e3b" font-size="13">trusted execution</text>
+    <text x="430" y="316" text-anchor="middle" fill="#064e3b" font-size="13">MCP gateway /mcp</text>
+    <text x="430" y="336" text-anchor="middle" fill="#064e3b" font-size="13">management API /api/v1</text>
+
+    <rect x="320" y="390" width="220" height="120" rx="12" fill="#10b981"/>
+    <text x="430" y="420" text-anchor="middle" font-weight="650" fill="#ffffff">worker</text>
+    <text x="430" y="443" text-anchor="middle" fill="#ecfdf5" font-size="13">approvals, notifications,</text>
+    <text x="430" y="461" text-anchor="middle" fill="#ecfdf5" font-size="13">webhooks, MCP discovery,</text>
+    <text x="430" y="479" text-anchor="middle" fill="#ecfdf5" font-size="13">detection, audit sealing,</text>
+    <text x="430" y="497" text-anchor="middle" fill="#ecfdf5" font-size="13">checkpoints, retention</text>
+
+    <rect x="320" y="540" width="220" height="70" rx="12" fill="#047857"/>
+    <text x="430" y="570" text-anchor="middle" font-weight="650" fill="#ffffff">egress proxy</text>
+    <text x="430" y="591" text-anchor="middle" fill="#d1fae5" font-size="13">network policy, peer checks</text>
+
+    <rect x="320" y="630" width="220" height="70" rx="12" fill="#064e3b"/>
+    <text x="430" y="660" text-anchor="middle" font-weight="650" fill="#ffffff">sandbox</text>
+    <text x="430" y="681" text-anchor="middle" fill="#a7f3d0" font-size="13">nsjail per run, no privileges</text>
+
+    <!-- data -->
+    <rect x="620" y="160" width="230" height="140" rx="12" fill="#ffffff" stroke="#cbd5e1"/>
+    <text x="735" y="190" text-anchor="middle" font-weight="650">Postgres</text>
+    <text x="735" y="213" text-anchor="middle" fill="#475569" font-size="13">decisions, policies, approvals,</text>
+    <text x="735" y="231" text-anchor="middle" fill="#475569" font-size="13">secrets (encrypted), threats,</text>
+    <text x="735" y="249" text-anchor="middle" fill="#475569" font-size="13">jobs outbox,</text>
+    <text x="735" y="267" text-anchor="middle" fill="#475569" font-size="13">hash-chained audit log</text>
+
+    <rect x="620" y="320" width="230" height="80" rx="12" fill="#ffffff" stroke="#cbd5e1"/>
+    <text x="735" y="352" text-anchor="middle" font-weight="650">Redis</text>
+    <text x="735" y="374" text-anchor="middle" fill="#475569" font-size="13">limits, counters, live events</text>
+
+    <rect x="620" y="420" width="230" height="80" rx="12" fill="#ffffff" stroke="#cbd5e1"/>
+    <text x="735" y="452" text-anchor="middle" font-weight="650">KMS</text>
+    <text x="735" y="474" text-anchor="middle" fill="#475569" font-size="13">wraps every data key</text>
+
+    <rect x="620" y="520" width="230" height="80" rx="12" fill="#ffffff" stroke="#cbd5e1"/>
+    <text x="735" y="552" text-anchor="middle" font-weight="650">Object storage</text>
+    <text x="735" y="574" text-anchor="middle" fill="#475569" font-size="13">signed audit checkpoints</text>
+
+    <!-- outside -->
+    <rect x="920" y="60" width="250" height="80" rx="12" fill="#e2e8f0"/>
+    <text x="1045" y="92" text-anchor="middle" font-weight="650">HTTP tools and APIs</text>
+    <text x="1045" y="113" text-anchor="middle" fill="#475569" font-size="13">called by AgentGuard,</text>
+    <text x="1045" y="130" text-anchor="middle" fill="#475569" font-size="13">secrets injected</text>
+
+    <rect x="920" y="160" width="250" height="80" rx="12" fill="#e2e8f0"/>
+    <text x="1045" y="192" text-anchor="middle" font-weight="650">MCP servers</text>
+    <text x="1045" y="213" text-anchor="middle" fill="#475569" font-size="13">HTTP or allowlisted stdio,</text>
+    <text x="1045" y="230" text-anchor="middle" fill="#475569" font-size="13">fingerprinted tools</text>
+
+    <rect x="920" y="260" width="250" height="80" rx="12" fill="#e2e8f0"/>
+    <text x="1045" y="292" text-anchor="middle" font-weight="650">Optional</text>
+    <text x="1045" y="313" text-anchor="middle" fill="#475569" font-size="13">OPA, Vault, Secrets Manager,</text>
+    <text x="1045" y="330" text-anchor="middle" fill="#475569" font-size="13">TokenShield, AI classifier</text>
+
+    <rect x="920" y="360" width="250" height="80" rx="12" fill="#e2e8f0"/>
+    <text x="1045" y="392" text-anchor="middle" font-weight="650">Notifications</text>
+    <text x="1045" y="413" text-anchor="middle" fill="#475569" font-size="13">email, signed webhooks,</text>
+    <text x="1045" y="430" text-anchor="middle" fill="#475569" font-size="13">SIEM (sealed audit records)</text>
+
+    <rect x="920" y="540" width="250" height="70" rx="12" fill="#e2e8f0"/>
+    <text x="1045" y="570" text-anchor="middle" font-weight="650">The internet</text>
+    <text x="1045" y="591" text-anchor="middle" fill="#475569" font-size="13">only allowed destinations</text>
+  </g>
+
+  <g fill="none" stroke-width="2" stroke-linejoin="round">
+    <!-- callers to agentguard -->
+    <path d="M240 100 C 280 100, 280 200, 318 200" stroke="#047857" marker-end="url(#g)"/>
+    <path d="M240 195 C 280 195, 280 240, 318 240" stroke="#047857" marker-end="url(#g)"/>
+    <path d="M240 290 L 318 290" stroke="#047857" marker-end="url(#g)"/>
+    <path d="M240 390 C 270 390, 270 95, 318 95" stroke="#64748b" marker-end="url(#a)"/>
+    <path d="M240 485 C 280 485, 280 330, 318 330" stroke="#64748b" marker-end="url(#a)"/>
+    <path d="M430 130 L 430 158" stroke="#64748b" marker-end="url(#a)"/>
+    <path d="M30 80 L 14 80 L 14 575 L 318 575" stroke="#047857" stroke-dasharray="6 5" marker-end="url(#g)"/>
+    <!-- api and worker to data -->
+    <path d="M540 230 L 618 230" stroke="#64748b" marker-end="url(#a)"/>
+    <path d="M540 340 C 580 340, 580 360, 618 360" stroke="#64748b" marker-end="url(#a)"/>
+    <path d="M540 440 C 580 440, 580 460, 618 460" stroke="#64748b" marker-end="url(#a)"/>
+    <path d="M540 420 C 590 420, 590 280, 618 280" stroke="#64748b" marker-end="url(#a)"/>
+    <path d="M540 495 C 590 495, 590 560, 618 560" stroke="#64748b" marker-end="url(#a)"/>
+    <path d="M430 360 L 430 388" stroke="#64748b" marker-end="url(#a)"/>
+    <!-- api to what agents act on -->
+    <path d="M540 175 L 600 100 L 918 100" stroke="#047857" marker-end="url(#g)"/>
+    <path d="M540 195 L 600 148 L 890 148 L 890 200 L 918 200" stroke="#047857" marker-end="url(#g)"/>
+    <path d="M890 200 L 890 300 L 918 300" stroke="#64748b" marker-end="url(#a)"/>
+    <path d="M540 470 L 600 510 L 880 510 L 880 400 L 918 400" stroke="#64748b" marker-end="url(#a)"/>
+    <!-- sandbox and egress -->
+    <path d="M540 350 C 585 350, 585 665, 542 665" stroke="#64748b" marker-end="url(#a)"/>
+    <path d="M320 665 L 290 665 L 290 600 L 318 600" stroke="#047857" marker-end="url(#g)"/>
+    <path d="M540 575 L 600 620 L 880 620 L 880 575 L 918 575" stroke="#047857" marker-end="url(#g)"/>
+  </g>
+  <g font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#475569">
+    <text x="640" y="92">trusted execution, secrets injected</text>
+    <text x="40" y="568">agents' own traffic</text>
+    <text x="640" y="638">connected address checked, recorded, counted</text>
+    <text x="552" y="652">code</text>
+  </g>
+</svg>
