@@ -1,0 +1,130 @@
+[project]
+name = "agentguard"
+version = "0.1.0"
+description = "Euron Open AgentGuard: the self-hosted security, governance and control plane for AI agents."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12,<3.14"
+# One package for the API, the background worker and the CLI; both images install it.
+dependencies = [
+  "pydantic>=2.9",
+  "pydantic-settings>=2.6",
+  "email-validator>=2.2",
+  "orjson>=3.10",
+  "fastapi>=0.115,<1",
+  "uvicorn[standard]>=0.32",
+  "httpx>=0.28",
+  "pyjwt>=2.10",
+  "sqlalchemy[asyncio]>=2.1",
+  "asyncpg>=0.30",
+  "alembic>=1.14",
+  "redis>=5.2",
+  "argon2-cffi>=23.1",
+  "boto3>=1.35",
+  "cryptography>=43",
+  "prometheus-client>=0.21",
+  "opentelemetry-api>=1.28",
+  "opentelemetry-sdk>=1.28",
+  "opentelemetry-exporter-otlp-proto-http>=1.28",
+  "python-multipart>=0.0.20",
+  "pyyaml>=6.0",
+  "jsonschema>=4.23",
+  "mcp>=2.3,<3",
+]
+
+[project.scripts]
+agentguard = "agentguard.cli:main"
+# The sandbox service (its own image, infra/docker/sandbox.Dockerfile).
+agentguard-sandbox = "agentguard_sandbox.cli:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "pytest-asyncio>=0.24",
+  "pytest-cov>=6.0",
+  "ruff>=0.8",
+  "mypy>=1.13",
+  "boto3-stubs[s3,kms,secretsmanager,ses]>=1.35",
+  "types-jsonschema>=4.23",
+  "hypothesis>=6.120",
+  "asgi-lifespan>=2.1",
+  "types-pyyaml>=6.0",
+  "websockets>=17.3",
+]
+# The sandbox image installs only these (uv sync --only-group sandbox), not the API's
+# database, AWS or AI libraries. They are also project dependencies above.
+sandbox = [
+  "fastapi>=0.115,<1",
+  "uvicorn[standard]>=0.32",
+  "pydantic>=2.9",
+  "pydantic-settings>=2.6",
+]
+# The hostile suite inside the sandbox image (scripts/test-sandbox.sh).
+sandbox-test = [
+  "pytest>=8.3",
+  "pytest-asyncio>=0.24",
+  "httpx>=0.28",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agentguard", "src/agentguard_sandbox", "src/mockai"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "S", "A", "C4", "SIM", "RUF", "ASYNC", "PT"]
+# E501: ruff format holds code to 100 columns; the long lines left are messages and log
+# strings, kept whole so they stay greppable.
+ignore = ["S101", "B008", "RUF012", "RUF001", "E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S107", "S311", "S608", "PT018", "PT022", "PT011", "S110", "ASYNC110"]
+"src/agentguard/migrations/**" = ["E501", "UP", "I"]
+"src/mockai/**" = ["E501", "S311"]
+"src/agentguard/demo/**" = ["E501", "S311"]
+# Detection patterns read better on one line each (regular expressions cannot be wrapped).
+"src/agentguard/protection/detectors.py" = ["E501"]
+"src/agentguard/protection/injection.py" = ["E501", "RUF001"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+mypy_path = "src"
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["asgi_lifespan.*", "asyncpg.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
+markers = [
+  "integration: needs Postgres, Redis, Floci and the mock AI (make test-integration)",
+  "security: attacks that must fail (part of the integration run)",
+  "sandbox: needs the sandbox image with nsjail (scripts/test-sandbox.sh)",
+]
+addopts = "-ra"
+# A test running longer than this gets every thread's stack dumped (it is not killed), so
+# a hang shows where it waits instead of only that it waits.
+faulthandler_timeout = 120
+
+[tool.coverage.run]
+source = ["agentguard"]
+branch = true
+concurrency = ["greenlet", "thread"]
+# The demo seed is exercised by make demo; the mock AI is test infrastructure.
+omit = ["*/migrations/*", "*/demo/*", "*/mockai/*"]
+
+[tool.coverage.report]
+skip_empty = true
+show_missing = true
