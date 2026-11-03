@@ -1,0 +1,35 @@
+# Copy to terraform.tfvars (git-ignored) and replace every placeholder.
+region      = "us-east-1"
+name_prefix = "acme-agentguard-prod" # the bucket names derive from this: make it globally unique
+
+hostname        = "agentguard.example.com"
+certificate_arn = "<ACM_CERTIFICATE_ARN>"     # same region, covering hostname
+route53_zone_id = "<ROUTE53_HOSTED_ZONE_ID>" # or remove and CNAME hostname to load_balancer_dns_name
+
+# Approval and incident mail (SES). New accounts start in the SES sandbox: request
+# production access.
+mail_domain       = "agentguard.example.com"
+mail_from_address = "agentguard@agentguard.example.com"
+# mail_from_name  = "Acme AgentGuard"
+
+# The image tag pushed to the ecr_repositories output (git commit or release).
+# scripts/aws-deploy.sh passes it on the command line instead.
+image_tag = "0.1.0"
+
+# Where your agents run: they may send outbound traffic through the egress proxy.
+# egress_client_cidrs              = ["10.20.0.0/16"]
+# egress_client_security_group_ids = ["<AGENT_SECURITY_GROUP_ID>"]
+
+# Optional integrations (tokens go in the integrations secret, never here).
+# vault_url       = "https://vault.example.com"
+# opa_url         = "http://opa.internal.example.com:8181"
+# tokenshield_url = "https://tokenshield.example.com"
+
+# alarm_email           = "oncall@example.com"
+# metrics_allowed_cidrs = ["203.0.113.10/32"] # your Prometheus egress address
+
+# A self-hosted classifier model inside the VPC (Ollama, vLLM) on a port other than 443:
+# ai_egress = [{ cidr = "10.0.0.0/16", port = 11434 }]
+
+# Extra non-secret settings (see docs/guides/configuration.md).
+# api_extra_environment = { LOGIN_RPM = "20", TOKEN_RPM = "120", WORKER_CONCURRENCY = "8" }
